@@ -54,15 +54,16 @@ app.*.map.json
 **/android/key.properties
 **/android/**/GeneratedPluginRegistrant.java
 
-/linux
-/macos
-/windows
-/ios
-/web
 .flatpak-builder
 
 .secrets
 
 # FVM Version Cache
 .fvm/
-repo
+
+# Build artifacts (cross-compilation)
+windows_engine/
+build/win_cross/
+build/windows_manual/
+*.flatpak
+releases/

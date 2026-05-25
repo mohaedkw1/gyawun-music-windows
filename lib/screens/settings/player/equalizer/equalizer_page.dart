@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gyawun/screens/settings/player/equalizer/cubit/equalizer_cubit.dart';
@@ -29,6 +31,43 @@ class _EqualizerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // On Windows/Linux, Equalizer and Loudness Enhancer are Android-only features
+    if (!Platform.isAndroid) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            S.of(context).Loudness_And_Equalizer,
+            style: mediumTextStyle(context, bold: false),
+          ),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.equalizer_rounded,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  Platform.isWindows
+                      ? 'Loudness Enhancer and Equalizer are not supported on Windows yet. These features rely on Android-specific audio APIs.'
+                      : 'Loudness Enhancer and Equalizer are not supported on this platform yet.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(

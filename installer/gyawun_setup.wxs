@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Gyawun Music - WiX Toolset Installer Script
+  Creates: Setup.msi
+
+  Build command:
+  candle gyawun_setup.wxs -out gyawun_setup.wixobj
+  light gyawun_setup.wixobj -out Setup.msi -ext WixUIExtension
+
+  Prerequisites:
+  - WiX Toolset v4+ (wix.exe)
+  - Build the Flutter Windows app first: flutter build windows --release
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <!-- Package Definition -->
+  <Package Name="Gyawun Music"
+           Manufacturer="Jhelum"
+           Version="2.0.18.0"
+           UpgradeCode="A1B2C3D4-E5F6-7890-ABCD-EF1234567890"
+           Language="1033"
+           Codepage="1252"
+           InstallerVersion="500"
+           Scope="perMachine">
+
+    <SummaryInformation Description="Gyawun Music - Ad-free YouTube Music Streaming App"
+                        Keywords="Music,Streaming,YouTube,Player"
+                        Manufacturer="Jhelum" />
+
+    <!-- Major Upgrade Rule - allow upgrading -->
+    <MajorUpgrade Schedule="afterInstallInitialize"
+                  DowngradeErrorMessage="A newer version of Gyawun Music is already installed." />
+
+    <!-- Media -->
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Icon -->
+    <Icon Id="app_icon.ico" SourceFile="..\windows\runner\resources\app_icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="app_icon.ico" />
+
+    <!-- Custom Properties -->
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/sheikhhaziq/yawun_music/issues" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/sheikhhaziq/gyawun_music" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/sheikhhaziq/gyawun_music/releases" />
+
+    <!-- Directory Structure -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Gyawun Music">
+        <Directory Id="DataFolder" Name="data" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Gyawun Music" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <!-- Components - Main Executable -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="MainExecutable" Guid="*">
+        <File Id="gyawun.exe"
+              Source="..\build\windows\x64\runner\Release\gyawun.exe"
+              KeyPath="yes"
+              Checksum="yes">
+          <Shortcut Id="StartMenuShortcut"
+                    Directory="ApplicationProgramsFolder"
+                    Name="Gyawun Music"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="app_icon.ico"
+                    IconIndex="0" />
+          <Shortcut Id="DesktopShortcut"
+                    Directory="DesktopFolder"
+                    Name="Gyawun Music"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="app_icon.ico"
+                    IconIndex="0" />
+        </File>
+      </Component>
+
+      <Component Id="FlutterEngine" Guid="*">
+        <File Id="flutter_windows.dll"
+              Source="..\build\windows\x64\runner\Release\flutter_windows.dll" />
+      </Component>
+
+      <!-- All other DLLs -->
+      <Component Id="RuntimeDLLs" Guid="*">
+        <File Id="mpv_2.dll"
+              Source="..\build\windows\x64\runner\Release\mpv-2.dll" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Data folder contents -->
+    <DirectoryRef Id="DataFolder">
+      <Component Id="FlutterAssets" Guid="*">
+        <File Id="icudtl.dat"
+              Source="..\build\windows\x64\runner\Release\data\icudtl.dat"
+              KeyPath="yes" />
+      </Component>
+
+      <Component Id="FlutterAssetBundle" Guid="*">
+        <File Id="flutter_assets.kernel_blob.bin"
+              Source="..\build\windows\x64\runner\Release\data\flutter_assets\kernel_blob.bin"
+              KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Start Menu Uninstall Shortcut -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="UninstallShortcut" Guid="*">
+        <Shortcut Id="UninstallProductShortcut"
+                  Name="Uninstall Gyawun Music"
+                  Target="[System64Folder]msiexec.exe"
+                  Arguments="/x [ProductCode]"
+                  Description="Uninstall Gyawun Music" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder"
+                      Directory="ApplicationProgramsFolder"
+                      On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\Jhelum\GyawunMusic"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Registry entries -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="RegistryEntries" Guid="*">
+        <RegistryValue Root="HKLM"
+                       Key="Software\Jhelum\GyawunMusic"
+                       Name="Version"
+                       Value="2.0.18"
+                       Type="string" />
+        <RegistryValue Root="HKLM"
+                       Key="Software\Jhelum\GyawunMusic"
+                       Name="InstallPath"
+                       Value="[INSTALLFOLDER]"
+                       Type="string" />
+        <RegistryValue Root="HKLM"
+                       Key="Software\Jhelum\GyawunMusic"
+                       Name="installed"
+                       Value="1"
+                       Type="integer"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- File type associations for audio files -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="FileAssociations" Guid="*">
+        <ProgId Id="GyawunMusic.mp3" Description="MP3 Audio File" Icon="app_icon.ico">
+          <Extension Id="mp3">
+            <Verb Id="open" Command="Open with Gyawun Music" Argument="&quot;%1\"" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="GyawunMusic.m4a" Description="M4A Audio File" Icon="app_icon.ico">
+          <Extension Id="m4a">
+            <Verb Id="open" Command="Open with Gyawun Music" Argument="&quot;%1\"" />
+          </Extension>
+        </ProgId>
+        <ProgId Id="GyawunMusic.flac" Description="FLAC Audio File" Icon="app_icon.ico">
+          <Extension Id="flac">
+            <Verb Id="open" Command="Open with Gyawun Music" Argument="&quot;%1\"" />
+          </Extension>
+        </ProgId>
+        <RegistryValue Root="HKLM"
+                       Key="Software\Jhelum\GyawunMusic"
+                       Name="FileAssociations"
+                       Value="1"
+                       Type="integer"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Feature Tree -->
+    <Feature Id="MainFeature"
+             Title="Gyawun Music"
+             Description="Core application files"
+             Level="1"
+             AllowAdvertise="no"
+             Display="expand"
+             ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentRef Id="MainExecutable" />
+      <ComponentRef Id="FlutterEngine" />
+      <ComponentRef Id="RuntimeDLLs" />
+      <ComponentRef Id="FlutterAssets" />
+      <ComponentRef Id="FlutterAssetBundle" />
+      <ComponentRef Id="RegistryEntries" />
+      <ComponentRef Id="UninstallShortcut" />
+
+      <Feature Id="FileAssociationFeature"
+               Title="File Associations"
+               Description="Associate audio files with Gyawun Music"
+               Level="1">
+        <ComponentRef Id="FileAssociations" />
+      </Feature>
+    </Feature>
+
+    <!-- UI -->
+    <ui:WixUI Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Gyawun Music" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <!-- License Agreement -->
+    <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />
+    <WixVariable Id="WixUIDialogBmp" Value="resources\dialog.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="resources\banner.bmp" />
+
+    <!-- Custom Action: Launch app after install -->
+    <CustomAction Id="LaunchApplication"
+                  FileKey="gyawun.exe"
+                  ExeCommand=""
+                  Return="asyncNoWait" />
+
+    <InstallExecuteSequence>
+      <Custom Action="LaunchApplication"
+              After="InstallFinalize"
+              Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed" />
+    </InstallExecuteSequence>
+
+    <!-- App Search for VC++ Redistributable -->
+    <Property Id="VC_REDIST_INSTALLED">
+      <RegistrySearch Id="SearchVCRedist"
+                      Root="HKLM"
+                      Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+                      Name="Version"
+                      Type="raw" />
+    </Property>
+
+    <!-- Condition: Require Windows 10+ -->
+    <Launch Condition="VersionNT &gt;= 1000"
+            Message="Gyawun Music requires Windows 10 or later." />
+
+  </Package>
+
+</Wix>

@@ -16,7 +16,7 @@ import 'settings_manager.dart';
 class MediaPlayer extends ChangeNotifier {
   late final AudioPlayer _player;
 
-  final _loudnessEnhancer = AndroidLoudnessEnhancer();
+  AndroidLoudnessEnhancer? _loudnessEnhancer;
   AndroidEqualizer? _equalizer;
   AndroidEqualizerParameters? _equalizerParams;
 
@@ -40,20 +40,25 @@ class MediaPlayer extends ChangeNotifier {
   Object? _activeSession;
 
   MediaPlayer() {
+    // Android-specific audio effects (Equalizer and Loudness Enhancer)
     if (Platform.isAndroid) {
+      _loudnessEnhancer = AndroidLoudnessEnhancer();
       _equalizer = AndroidEqualizer();
     }
     final AudioPipeline pipeline = AudioPipeline(
       androidAudioEffects: [
         if (Platform.isAndroid && _equalizer != null) _equalizer!,
-        _loudnessEnhancer,
+        if (Platform.isAndroid && _loudnessEnhancer != null)
+          _loudnessEnhancer!,
       ],
     );
     _player = AudioPlayer(audioPipeline: pipeline);
 
-    GetIt.I.registerSingleton<AndroidLoudnessEnhancer>(_loudnessEnhancer);
-    if (Platform.isAndroid && _equalizer != null) {
-      GetIt.I.registerSingleton<AndroidEqualizer>(_equalizer!);
+    if (Platform.isAndroid) {
+      GetIt.I.registerSingleton<AndroidLoudnessEnhancer>(_loudnessEnhancer!);
+      if (_equalizer != null) {
+        GetIt.I.registerSingleton<AndroidEqualizer>(_equalizer!);
+      }
     }
 
     _init();
@@ -133,16 +138,18 @@ class MediaPlayer extends ChangeNotifier {
   }
 
   Future<void> _loadLoudnessEnhancer() async {
-    await _loudnessEnhancer.setEnabled(
+    if (!Platform.isAndroid || _loudnessEnhancer == null) return;
+    await _loudnessEnhancer!.setEnabled(
       GetIt.I<SettingsManager>().loudnessEnabled,
     );
 
-    await _loudnessEnhancer.setTargetGain(
+    await _loudnessEnhancer!.setTargetGain(
       GetIt.I<SettingsManager>().loudnessTargetGain,
     );
   }
 
   Future<Map> getEqualizerParameters() async {
+    if (!Platform.isAndroid || _equalizer == null) return {};
     Map storedParams = GetIt.I<SettingsManager>().equalizerParameters;
     if (storedParams.isNotEmpty) return storedParams;
     _equalizerParams = await _equalizer!.parameters;
@@ -176,24 +183,32 @@ class MediaPlayer extends ChangeNotifier {
   }
 
   Future<void> setLoudnessEnabled(bool value) async {
-    await _loudnessEnhancer.setEnabled(value);
+    if (Platform.isAndroid && _loudnessEnhancer != null) {
+      await _loudnessEnhancer!.setEnabled(value);
+    }
     GetIt.I<SettingsManager>().loudnessEnabled = value;
   }
 
   Future<void> setEqualizerEnabled(bool value) async {
-    await _equalizer?.setEnabled(value);
+    if (Platform.isAndroid && _equalizer != null) {
+      await _equalizer!.setEnabled(value);
+    }
     GetIt.I<SettingsManager>().equalizerEnabled = value;
   }
 
   Future<void> setLoudnessTargetGain(double value) async {
-    await _loudnessEnhancer.setTargetGain(value);
+    if (Platform.isAndroid && _loudnessEnhancer != null) {
+      await _loudnessEnhancer!.setTargetGain(value);
+    }
     GetIt.I<SettingsManager>().loudnessTargetGain = value;
   }
 
   Future<void> setEqualizerBandGain(int bandIndex, double gain) async {
     await GetIt.I<SettingsManager>().setEqualizerBandsGain(bandIndex, gain);
-    _equalizerParams = await _equalizer!.parameters;
-    await _equalizerParams!.bands[bandIndex].setGain(gain);
+    if (Platform.isAndroid && _equalizer != null) {
+      _equalizerParams = await _equalizer!.parameters;
+      await _equalizerParams!.bands[bandIndex].setGain(gain);
+    }
   }
 
   void _listenToChangesInPlaylist() {

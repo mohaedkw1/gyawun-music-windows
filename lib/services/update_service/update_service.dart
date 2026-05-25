@@ -149,12 +149,25 @@ class UpdateService {
       }
     }
 
-    // if (Platform.isWindows) {
-    //   return assets.firstWhere(
-    //     (a) => a['name'].toString().endsWith('.exe'),
-    //     orElse: () => null,
-    //   );
-    // }
+    if (Platform.isWindows) {
+      // Look for .exe or .msix Windows installers
+      final match = assets.where((a) {
+        final name = a['name'].toString().toLowerCase();
+        return name.endsWith('.exe') || name.endsWith('.msix');
+      }).toList();
+      if (match.isNotEmpty) return match.first;
+    }
+
+    if (Platform.isLinux) {
+      // Look for .flatpak, .AppImage, or .deb Linux installers
+      final match = assets.where((a) {
+        final name = a['name'].toString().toLowerCase();
+        return name.endsWith('.flatpak') ||
+            name.endsWith('.appimage') ||
+            name.endsWith('.deb');
+      }).toList();
+      if (match.isNotEmpty) return match.first;
+    }
 
     return null;
   }

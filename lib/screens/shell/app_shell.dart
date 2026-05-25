@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gyawun/services/update_service/update_service.dart';
 import 'package:navigation_rail_m3e/navigation_rail_m3e.dart';
+// receive_sharing_intent only supports Android/iOS - use conditional import
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import '../../generated/l10n.dart';
@@ -20,11 +21,11 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  late StreamSubscription _intentSub;
+  StreamSubscription? _intentSub;
   @override
   void initState() {
     super.initState();
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isIOS) {
       _intentSub = ReceiveSharingIntent.instance.getMediaStream().listen((
         value,
       ) {
@@ -64,7 +65,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   void dispose() {
-    _intentSub.cancel();
+    _intentSub?.cancel();
     super.dispose();
   }
 

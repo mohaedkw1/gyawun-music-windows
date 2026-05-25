@@ -79,6 +79,7 @@ dependencies:
       url: https://github.com/sheikhhaziq/yt_music.git
   connectivity_plus: ^7.0.0
   audio_service_mpris: ^0.2.0
+  window_manager: ^0.4.0
   fluentui_system_icons: ^1.1.273
   navigation_rail_m3e: ^0.3.5
   m3e_collection: ^0.3.7

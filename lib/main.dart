@@ -12,6 +12,7 @@ import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:m3e_collection/m3e_collection.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 import 'package:yt_music/client.dart';
 import 'package:yt_music/modals/yt_config.dart';
 import 'package:yt_music/ytmusic.dart';
@@ -45,18 +46,41 @@ void main() async {
     JustAudioMediaKit.prefetchPlaylist = true;
     JustAudioMediaKit.pitch = true;
   }
-  await initialiseHive();
-  await SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-    overlays: [SystemUiOverlay.top],
-  );
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
+  // Configure window manager for desktop platforms
+  if (Platform.isWindows || Platform.isLinux) {
+    await windowManager.ensureInitialized();
+    WindowOptions windowOptions = const WindowOptions(
+      size: Size(1280, 720),
+      minimumSize: Size(400, 600),
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.normal,
+      title: 'Gyawun Music',
+    );
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
+
+  await initialiseHive();
+
+  // System UI mode and orientation are only supported on mobile platforms
+  if (Platform.isAndroid || Platform.isIOS) {
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: [SystemUiOverlay.top],
+    );
+
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
 
   SettingsManager settingsManager = await SettingsManager.create();
   GetIt.I.registerSingleton<SettingsManager>(settingsManager);

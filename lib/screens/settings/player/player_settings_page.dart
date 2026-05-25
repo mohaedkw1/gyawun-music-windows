@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,15 +40,17 @@ class PlayerSettingsPage extends StatelessWidget {
                     children: [
                       ExpressiveListGroup(
                         children: [
-                          ExpressiveListTile(
-                            title: Text(S.of(context).Loudness_And_Equalizer),
-                            leading: SettingsColorIcon(
-                              icon: Icons.equalizer_rounded,
+                          // Equalizer is Android-only
+                          if (Platform.isAndroid)
+                            ExpressiveListTile(
+                              title: Text(S.of(context).Loudness_And_Equalizer),
+                              leading: SettingsColorIcon(
+                                icon: Icons.equalizer_rounded,
+                              ),
+                              trailing: Icon(FluentIcons.chevron_right_24_filled),
+                              onTap: () =>
+                                  context.go('/settings/player/equalizer'),
                             ),
-                            trailing: Icon(FluentIcons.chevron_right_24_filled),
-                            onTap: () =>
-                                context.go('/settings/player/equalizer'),
-                          ),
                           ExpressiveSwitchListTile(
                             title: Text(S.of(context).Skip_Silence),
                             leading: SettingsColorIcon(

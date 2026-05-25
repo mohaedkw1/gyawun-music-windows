@@ -1,0 +1,1 @@
+# Windows Build Workflow\n\nCopy the content of this file to `.github/workflows/build-windows.yml` via GitHub web interface.\n\n## Steps:\n1. Go to https://github.com/$REPO/new/main/.github/workflows\n2. Name the file `build-windows.yml`\n3. Copy the workflow content below\n4. Click Commit\n\n---\n
